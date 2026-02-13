@@ -42,7 +42,7 @@ Hirepulse/
 ### Backend (`.env`)
 
 ```env
-DATABASE_URL=postgresql+psycopg2://hirepulse_user:Admin%40123@localhost:5432/hirepulse
+DATABASE_URL=postgresql+psycopg2://user:password@localhost:5432/hirepulse
 SECRET_KEY=<set-a-strong-secret>
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
