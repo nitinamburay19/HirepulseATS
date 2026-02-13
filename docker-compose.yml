@@ -2,8 +2,8 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: hirepulse_user
-      POSTGRES_PASSWORD: Admin@123
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
       POSTGRES_DB: hirepulse
     ports:
       - "5432:5432"
@@ -16,7 +16,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+psycopg2://hirepulse_user:Admin%40123@postgres:5432/hirepulse
+      DATABASE_URL: postgresql+psycopg2://user:password@postgres:5432/hirepulse
       SECRET_KEY: ${SECRET_KEY}
       NLP_MODELS_DIR: /app/nlp_models
       EMAIL_ENABLED: ${EMAIL_ENABLED:-true}
