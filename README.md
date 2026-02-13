@@ -160,6 +160,44 @@ Before deployment, ensure:
 5. Frontend `VITE_API_BASE_URL` points to your production backend.
 6. CORS origins include only trusted domains.
 
+## Railway Deployment
+
+Deploy as two Railway services from the same GitHub repo:
+
+1. `hirepulse-backend` (root `/`)
+2. `hirepulse-frontend` (root `/hirepulse-frontend`)
+
+### Backend service (root `/`)
+
+Railway uses root `Dockerfile` and runs:
+- `alembic upgrade head`
+- `uvicorn app.main:app --port $PORT`
+
+Set backend variables in Railway:
+
+- `DATABASE_URL` (use Railway PostgreSQL URL; must start with `postgresql+psycopg2://`)
+- `SECRET_KEY`
+- `ALGORITHM=HS256`
+- `ACCESS_TOKEN_EXPIRE_MINUTES=30`
+- `CORS_ORIGINS` (include frontend Railway URL and localhost if needed)
+- `EMAIL_ENABLED`
+- `EMAIL_FROM`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASSWORD`
+- `SMTP_USE_TLS`
+
+### Frontend service (`/hirepulse-frontend`)
+
+Railway uses `hirepulse-frontend/Dockerfile`.
+
+Set frontend variable:
+
+- `VITE_API_BASE_URL=https://<your-backend-service>.up.railway.app`
+
+After frontend deploy, update backend `CORS_ORIGINS` with frontend URL.
+
 ## Current Migration Head
 
 Latest revision:

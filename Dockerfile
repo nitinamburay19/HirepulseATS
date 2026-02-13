@@ -1,8 +1,11 @@
 FROM python:3.11-slim
 
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
-# Install system dependencies for resume parsing
+# Install system dependencies for resume parsing.
 RUN apt-get update && apt-get install -y \
     libmagic1 \
     poppler-utils \
@@ -10,15 +13,20 @@ RUN apt-get update && apt-get install -y \
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir alembic
 
-# Install spaCy model
-RUN python -m spacy download en_core_web_sm
+# Optional NLP model download; do not fail image build if unavailable.
+RUN python -m spacy download en_core_web_sm || true
 
-COPY . .
+COPY alembic.ini .
+COPY alembic ./alembic
+COPY app ./app
+COPY scripts ./scripts
+COPY run.py .
 
-# Create upload directories
-RUN mkdir -p uploads/candidate_documents uploads/parsed_resumes
+RUN mkdir -p uploads/candidate_documents uploads/parsed_resumes uploads/temp
 
-RUN python -m pip install alembic
+EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Railway provides PORT. Run DB migrations before app startup.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
