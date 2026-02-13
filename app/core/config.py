@@ -8,10 +8,10 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
     
     # Database
-    DATABASE_URL: str = "postgresql+psycopg2://hirepulse_user:Admin%%40123@localhost:5432/hirepulse"
+    DATABASE_URL: str = "postgresql+psycopg2://user:password@localhost:5432/hirepulse"
     
     # JWT
-    SECRET_KEY: str = "your-super-secret-jwt-key-here-change-in-production"
+    SECRET_KEY: str = "change-me-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
