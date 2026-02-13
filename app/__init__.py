@@ -1,0 +1,3 @@
+"""
+HirePulse Backend Application Package
+"""
