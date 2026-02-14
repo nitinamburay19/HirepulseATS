@@ -41,8 +41,12 @@ def _for_alembic_config(url: str) -> str:
     return url.replace("%", "%%")
 
 
-# Prefer DATABASE_URL from environment (Railway/containers), fallback to alembic.ini.
-database_url = os.getenv("DATABASE_URL")
+# Prefer Railway/runtime DB URLs from environment, fallback to alembic.ini for local use.
+database_url = (
+    os.getenv("DATABASE_URL")
+    or os.getenv("DATABASE_PRIVATE_URL")
+    or os.getenv("POSTGRES_URL")
+)
 if database_url:
     config.set_main_option(
         "sqlalchemy.url",
@@ -60,6 +64,10 @@ else:
             _for_alembic_config(
                 f"postgresql+psycopg2://{user_name}:{password}@{host}:{port}/{dbname}"
             ),
+        )
+    elif os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"):
+        raise RuntimeError(
+            "Database URL missing in Railway. Set DATABASE_URL or DATABASE_PRIVATE_URL."
         )
 
 # Configure logging

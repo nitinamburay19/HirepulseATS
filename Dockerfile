@@ -28,5 +28,5 @@ RUN mkdir -p uploads/candidate_documents uploads/parsed_resumes uploads/temp
 
 EXPOSE 8000
 
-# Railway provides PORT. Run DB migrations before app startup.
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Railway provides PORT. Resolve DB URL aliases, run migrations, then start API.
+CMD ["sh", "-c", "export DATABASE_URL=\"${DATABASE_URL:-${DATABASE_PRIVATE_URL:-${POSTGRES_URL:-}}}\" && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

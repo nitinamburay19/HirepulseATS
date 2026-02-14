@@ -22,7 +22,11 @@ def _normalize_database_url(raw_url: str) -> str:
 
 
 def _database_url_from_env() -> str:
-    direct = os.getenv("DATABASE_URL")
+    direct = (
+        os.getenv("DATABASE_URL")
+        or os.getenv("DATABASE_PRIVATE_URL")
+        or os.getenv("POSTGRES_URL")
+    )
     if direct:
         return _normalize_database_url(direct)
 
@@ -34,6 +38,11 @@ def _database_url_from_env() -> str:
     dbname = os.getenv("PGDATABASE")
     if host and user and password and dbname:
         return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
+
+    if os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"):
+        raise RuntimeError(
+            "Database URL is not configured. Set DATABASE_URL (or DATABASE_PRIVATE_URL) in Railway."
+        )
 
     return "postgresql+psycopg2://user:password@localhost:5432/hirepulse"
 
