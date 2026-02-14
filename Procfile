@@ -1,1 +1,1 @@
-web: sh -c 'export DATABASE_URL="${DATABASE_URL:-${DATABASE_PRIVATE_URL:-${POSTGRES_URL:-}}}" && python -m alembic upgrade head && python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}'
+web: sh -c 'export DATABASE_URL="${DATABASE_URL:-${DATABASE_PRIVATE_URL:-${POSTGRES_URL:-}}}" && python3 -m alembic upgrade head && python3 -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}'
