@@ -175,7 +175,7 @@ Railway uses root `Dockerfile` and runs:
 
 Set backend variables in Railway:
 
-- `DATABASE_URL` (use Railway PostgreSQL URL; must start with `postgresql+psycopg2://`)
+- `DATABASE_URL` (use Railway PostgreSQL URL; `postgres://` is also accepted)
 - `SECRET_KEY`
 - `ALGORITHM=HS256`
 - `ACCESS_TOKEN_EXPIRE_MINUTES=30`
@@ -197,6 +197,17 @@ Set frontend variable:
 - `VITE_API_BASE_URL=https://<your-backend-service>.up.railway.app`
 
 After frontend deploy, update backend `CORS_ORIGINS` with frontend URL.
+
+### Common Railway DB error fix
+
+If deploy logs show:
+- `connection to server at "localhost" ... refused`
+
+Then backend did not receive a valid DB URL.
+
+Fix:
+1. In Railway backend service, set `DATABASE_URL` from Railway PostgreSQL connect string.
+2. Redeploy backend service.
 
 ## Current Migration Head
 

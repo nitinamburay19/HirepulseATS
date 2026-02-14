@@ -25,10 +25,30 @@ from app.models import (
 # Alembic Config object
 config = context.config
 
+def _normalize_database_url(raw_url: str) -> str:
+    url = (raw_url or "").strip()
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+psycopg2://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    return url
+
+
 # Prefer DATABASE_URL from environment (Railway/containers), fallback to alembic.ini.
 database_url = os.getenv("DATABASE_URL")
 if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+    config.set_main_option("sqlalchemy.url", _normalize_database_url(database_url))
+else:
+    host = os.getenv("PGHOST")
+    port = os.getenv("PGPORT", "5432")
+    user_name = os.getenv("PGUSER")
+    password = os.getenv("PGPASSWORD")
+    dbname = os.getenv("PGDATABASE")
+    if host and user_name and password and dbname:
+        config.set_main_option(
+            "sqlalchemy.url",
+            f"postgresql+psycopg2://{user_name}:{password}@{host}:{port}/{dbname}",
+        )
 
 # Configure logging
 if config.config_file_name is not None:

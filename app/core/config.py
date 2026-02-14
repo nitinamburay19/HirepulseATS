@@ -3,12 +3,45 @@ Application configuration settings
 """
 from pydantic_settings import BaseSettings
 from typing import Optional, List
+import os
+
+
+def _normalize_database_url(raw_url: str) -> str:
+    """
+    Normalize database URL for SQLAlchemy.
+
+    Railway often provides postgres://... while SQLAlchemy expects
+    postgresql+psycopg2://... for psycopg2.
+    """
+    url = (raw_url or "").strip()
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+psycopg2://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    return url
+
+
+def _database_url_from_env() -> str:
+    direct = os.getenv("DATABASE_URL")
+    if direct:
+        return _normalize_database_url(direct)
+
+    # Fallback for environments that expose PG* vars.
+    host = os.getenv("PGHOST")
+    port = os.getenv("PGPORT", "5432")
+    user = os.getenv("PGUSER")
+    password = os.getenv("PGPASSWORD")
+    dbname = os.getenv("PGDATABASE")
+    if host and user and password and dbname:
+        return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
+
+    return "postgresql+psycopg2://user:password@localhost:5432/hirepulse"
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
     
     # Database
-    DATABASE_URL: str = "postgresql+psycopg2://user:password@localhost:5432/hirepulse"
+    DATABASE_URL: str = _database_url_from_env()
     
     # JWT
     SECRET_KEY: str = "change-me-in-production"
