@@ -34,10 +34,20 @@ def _normalize_database_url(raw_url: str) -> str:
     return url
 
 
+def _for_alembic_config(url: str) -> str:
+    """
+    Escape `%` for ConfigParser interpolation used by Alembic config.
+    """
+    return url.replace("%", "%%")
+
+
 # Prefer DATABASE_URL from environment (Railway/containers), fallback to alembic.ini.
 database_url = os.getenv("DATABASE_URL")
 if database_url:
-    config.set_main_option("sqlalchemy.url", _normalize_database_url(database_url))
+    config.set_main_option(
+        "sqlalchemy.url",
+        _for_alembic_config(_normalize_database_url(database_url)),
+    )
 else:
     host = os.getenv("PGHOST")
     port = os.getenv("PGPORT", "5432")
@@ -47,7 +57,9 @@ else:
     if host and user_name and password and dbname:
         config.set_main_option(
             "sqlalchemy.url",
-            f"postgresql+psycopg2://{user_name}:{password}@{host}:{port}/{dbname}",
+            _for_alembic_config(
+                f"postgresql+psycopg2://{user_name}:{password}@{host}:{port}/{dbname}"
+            ),
         )
 
 # Configure logging
