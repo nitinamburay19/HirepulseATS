@@ -4,6 +4,7 @@ Application configuration settings
 from pydantic_settings import BaseSettings
 from typing import Optional, List
 import os
+from urllib.parse import urlparse
 
 
 def _normalize_database_url(raw_url: str) -> str:
@@ -22,13 +23,21 @@ def _normalize_database_url(raw_url: str) -> str:
 
 
 def _database_url_from_env() -> str:
+    on_railway = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"))
     direct = (
         os.getenv("DATABASE_URL")
         or os.getenv("DATABASE_PRIVATE_URL")
         or os.getenv("POSTGRES_URL")
     )
     if direct:
-        return _normalize_database_url(direct)
+        normalized = _normalize_database_url(direct)
+        host = (urlparse(normalized).hostname or "").lower()
+        if on_railway and host in {"localhost", "127.0.0.1", "::1"}:
+            raise RuntimeError(
+                "Invalid DATABASE_URL for Railway: localhost is not reachable from Railway containers. "
+                "Use Railway Postgres DATABASE_URL / DATABASE_PRIVATE_URL."
+            )
+        return normalized
 
     # Fallback for environments that expose PG* vars.
     host = os.getenv("PGHOST")
@@ -39,7 +48,7 @@ def _database_url_from_env() -> str:
     if host and user and password and dbname:
         return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
 
-    if os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"):
+    if on_railway:
         raise RuntimeError(
             "Database URL is not configured. Set DATABASE_URL (or DATABASE_PRIVATE_URL) in Railway."
         )

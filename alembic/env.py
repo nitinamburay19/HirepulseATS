@@ -2,6 +2,7 @@ from logging.config import fileConfig
 import sys
 from pathlib import Path
 import os
+from urllib.parse import urlparse
 
 from sqlalchemy import engine_from_config, pool
 from alembic import context
@@ -48,9 +49,17 @@ database_url = (
     or os.getenv("POSTGRES_URL")
 )
 if database_url:
+    normalized_db_url = _normalize_database_url(database_url)
+    on_railway = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"))
+    host = (urlparse(normalized_db_url).hostname or "").lower()
+    if on_railway and host in {"localhost", "127.0.0.1", "::1"}:
+        raise RuntimeError(
+            "Invalid DATABASE_URL for Railway: localhost is not reachable from Railway containers. "
+            "Set DATABASE_URL or DATABASE_PRIVATE_URL from Railway Postgres service."
+        )
     config.set_main_option(
         "sqlalchemy.url",
-        _for_alembic_config(_normalize_database_url(database_url)),
+        _for_alembic_config(normalized_db_url),
     )
 else:
     host = os.getenv("PGHOST")
